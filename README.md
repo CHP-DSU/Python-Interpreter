@@ -1,2 +1,2 @@
-# CHP
-Connected Home Project Repo
+# CHP Interpreter
+Utility interpreter
