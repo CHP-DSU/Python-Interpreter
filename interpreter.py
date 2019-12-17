@@ -10,7 +10,16 @@ class bcolors:
     UNDERLINE = '\033[4m'
     OFF = "\033[0;0m"
 
-error = 0
+# Error Codes
+NO_ERROR = 0
+MISSING_OPERATION = -1 
+NO_INT_AFTER_POWER = 1
+GROUP_STRUCT_ERROR = 2
+SET_QUERY_CONFLICT = 3
+LOAD_ONINE_CONFLICT= 4
+
+
+error = NO_ERROR
 realerror = ''
 command = ''
 commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
@@ -21,7 +30,7 @@ def interpreter(text):
     global realerror
     global command
     global commandFlags
-    if not error == 0:
+    if not error == NO_ERROR:
         return
     if len(text) == 0:
         return
@@ -36,7 +45,7 @@ def interpreter(text):
             text.pop(0)
             commandFlags['powerLvl'] = 1
         except (ValueError, IndexError) as e:
-            error = 1
+            error = MISSING_OPERATION
             realerror = e
             commandFlags['powerLvl'] = 0
     elif text[0] == 'group' or text[0] == 'groups':
@@ -50,7 +59,7 @@ def interpreter(text):
             text.pop(0)
             commandFlags['group#s'] = 1
         except (ValueError, IndexError) as e:
-            error = 2
+            error = GROUP_STRUCT_ERROR
             realerror = e
             commandFlags['group#s'] = 0
     elif text[0] == 'query'or text[0] == 'q':
@@ -59,6 +68,9 @@ def interpreter(text):
     elif text[0] == 'load':
         commandFlags['load'] = 1
         command = command + 'loading '
+    elif text[0] == 'onlie':
+        commandFlags['online'] = 1
+        command = command + 'online '
 
 
 
@@ -74,7 +86,7 @@ def resetGlobal():
     global realerror
     global command
     global commandFlags
-    error = 0
+    error = NO_ERROR
     realerror = ''
     command = ''
     commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
@@ -92,42 +104,67 @@ def run():
     interpreter(text)
     #print(commandFlags)
 
-    if error == 0:
-            #######
-            # set #
-            #######
+    if error == NO_ERROR:
+            ###################################
+            #               set               #
+            ################################### 
         if commandFlags.get('set') == 1 and commandFlags.get('power') == 1 and commandFlags.get('powerLvl') == 1:
             if commandFlags.get('query') == 1:
-                error = 3
+                error = SET_QUERY_CONFLICT
                 # tried to querry and set together. 
             elif commandFlags.get('groups') == 1:
                 if commandFlags.get('group#s') == 1:
                     print(bcolors.YELLOW + command)
                 else:
-                    error = -1
+                    error = MISSING_OPERATION
             else:
                 print(bcolors.YELLOW + command + 'to all groups. ')
-        elif commandFlags.get('query') == 1 and commandFlags.get('load'):
+
+            ###################################
+            #           query load            #
+            ###################################    
+        elif commandFlags.get('query') == 1 and commandFlags.get('load') == 1:
             if commandFlags.get('set') == 1:
-                error = 3
+                error = SET_QUERY_CONFLICT
                 # tried to querry and set together. 
+            if commandFlags.get('online') == 1:
+                error = LOAD_ONINE_CONFLICT
             elif commandFlags.get('groups') == 1:
                 if commandFlags.get('group#s') == 1:
                     print(bcolors.YELLOW + command)
                 else:
-                    error = -1
+                    error = MISSING_OPERATION
+            else:
+                print(bcolors.YELLOW + command + 'all groups.')
+
+            ###################################
+            #          query online           #
+            ################################### 
+        elif commandFlags.get('query') == 1 and commandFlags.get('online'):
+            if commandFlags.get('set') == 1:
+                error = SET_QUERY_CONFLICT
+                # tried to querry and set together. 
+            if commandFlags.get('load') == 1:
+                error = LOAD_ONINE_CONFLICT
+                # tried to querry load and online together. 
+            elif commandFlags.get('groups') == 1:
+                if commandFlags.get('group#s') == 1:
+                    print(bcolors.YELLOW + command)
+                else:
+                    error = MISSING_OPERATION
             else:
                 print(bcolors.YELLOW + command + 'all groups.')
 
 
 
-    if error == -1:
+
+    if error == MISSING_OPERATION:
         print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Missing command operation")
-    elif error == 1:
+    elif error == NO_INT_AFTER_POWER:
         print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Expecting integer after 'power'.")
-    elif error == 2:
+    elif error == GROUP_STRUCT_ERROR:
         print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Invalid group structure. example: 'groups 1,4,5'.")
-    elif error == 3:
+    elif error == SET_QUERY_CONFLICT:
         print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Cannot use 'set' and 'query' together.")
 
     resetGlobal()
