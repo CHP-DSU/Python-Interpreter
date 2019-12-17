@@ -1,4 +1,6 @@
 #cybery looking prompt
+import socket
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -25,6 +27,19 @@ command = ''
 prompt = bcolors.OKGREEN + bcolors.BOLD + "::> " + bcolors.OFF
 commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
 firstArgs = {'set', 'help', 'query', 'q'}
+
+
+
+def sendcommand(command):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    host = "172.16.68.101"
+    port =8000
+    s.connect((host,port))
+    s.send(command.encode())
+    data = s.recv(1024).decode()
+    print (bcolors.YELLOW + data)
+    s.close()
+
 
 def interpreter(text):
     #print(text)
@@ -158,10 +173,14 @@ def run():
                     # tried to querry and set together. 
                 elif commandFlags.get('groups') == 1:
                     if commandFlags.get('group#s') == 1:
+                        #Send Command
+                        sendcommand(command)
                         print(bcolors.YELLOW + command)
                     else:
                         error = MISSING_OPERATION
                 else:
+                    #Send Command
+                    sendcommand(command)
                     print(bcolors.YELLOW + command + 'to all groups. ')
 
                 ###################################

@@ -13,12 +13,21 @@ class client(Thread):
         Thread.__init__(self)
         self.sock = socket
         self.addr = address
+        print("Connection Received From:\t> " + str(self.addr))
         self.start()
 
     def run(self):
-        while 1:
-            print('Client sent:', self.sock.recv(1024).decode())
-            self.sock.send(b'Oi you sent something to me')
+        try:
+            while 1:
+                data = self.sock.recv(1024).decode()
+                if data:
+                    print('Client sent:' + data)
+                    self.sock.send(b'Oi you sent something to me')
+                else:
+                    self.sock.send(b'No info sent')
+        except:
+            self.sock.close()
+            print("Connection Closed on Address\t> " + str(self.addr))
 
 serversocket.listen(5)
 print ('server started and listening')
