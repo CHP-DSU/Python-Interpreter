@@ -22,6 +22,7 @@ LOAD_ONINE_CONFLICT= 4
 error = NO_ERROR
 realerror = ''
 command = ''
+prompt = bcolors.OKGREEN + bcolors.BOLD + "::> " + bcolors.OFF
 commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
 firstArgs = {'set', 'help', 'query', 'q'}
 
@@ -103,7 +104,7 @@ def run():
     global realerror
     global command
     global commandFlags
-    text = input(bcolors.OKGREEN + bcolors.BOLD + '=> ' + bcolors.OFF + bcolors.OKBLUE).lower().split(' ')
+    text = input(prompt + bcolors.OKBLUE).lower().split(' ')
     if text[0].strip('\n') == 'quit':
         return
     if not ifValidFirst( text[0].strip('\n') ):
