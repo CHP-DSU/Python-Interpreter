@@ -22,6 +22,7 @@ LOAD_ONINE_CONFLICT= 4
 error = NO_ERROR
 realerror = ''
 command = ''
+prompt = bcolors.OKGREEN + bcolors.BOLD + "::> " + bcolors.OFF
 commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
 firstArgs = {'set', 'help', 'query', 'q'}
 
@@ -79,7 +80,40 @@ def interpreter(text):
     interpreter(text)
 
 def printHelp():
-    print("Help Page:")
+    print("=========== Help Page ===========                                                     ")
+    print("#### set                                                                              ")
+    print("                                                                                      ")
+    print("Allows the hard setting of a state. Overrides previous state of the given             ")
+    print("groups. 'set' defaults to all groups.                                                 ")
+    print("                                                                                      ")
+    print("Flags:                                                                                ")
+    print("  power                                                                               ")
+    print("    sets the power                                                                    ")
+    print("    usage:  set power 85                                                              ")
+    print("            (sets power to 85%)                                                       ")
+    print(" group (groups)                                                                       ")
+    print("    allows the user to specifiy groups, can be combined with power                    ")
+    print("    usage:  set groups 1,2,3 power 75                                                 ")
+    print("                                                                                      ")
+    print("##### query (q)                                                                       ")
+    print("                                                                                      ")
+    print("Allows the user to request information of a given group. Defaults to all groups.      ")
+    print("                                                                                      ")
+    print("Flags:                                                                                ")
+    print("  load                                                                                ")
+    print("    retrives most up to date power usage on a given set of groups, defaults to global.")
+    print("    usage: query load groups 1,7,2                                                    ")
+    print("  online                                                                              ")
+    print("    gets the status of devices and retrives what devices are online of a given group. ")
+    print("    usage: query load online group 5                                                  ")
+    print("                                                                                      ")
+    print("## Console                                                                            ") 
+    print("                                                                                      ")
+    print("help                                                                                  ")
+    print("  display the global help pages                                                       ")
+    print("quit                                                                                  ")
+    print("  quit the terminal                                                                   ")
+    print("=================================                                                     ")
     return
 
 def resetGlobal():
@@ -103,7 +137,7 @@ def run():
     global realerror
     global command
     global commandFlags
-    text = input(bcolors.OKGREEN + bcolors.BOLD + '=> ' + bcolors.OFF + bcolors.OKBLUE).lower().split(' ')
+    text = input(prompt + bcolors.OKBLUE).lower().split(' ')
     if text[0].strip('\n') == 'quit':
         return
     if not ifValidFirst( text[0].strip('\n') ):
