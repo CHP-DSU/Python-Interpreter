@@ -22,7 +22,7 @@ class client(Thread):
                 data = self.sock.recv(1024).decode()
                 if data:
                     print('Client sent:' + data)
-                    self.sock.send(b'Oi you sent something to me')
+                    self.sock.send(b'Conection Success')
                 else:
                     self.sock.send(b'No info sent')
         except:

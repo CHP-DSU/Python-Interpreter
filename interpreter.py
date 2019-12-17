@@ -32,12 +32,12 @@ firstArgs = {'set', 'help', 'query', 'q'}
 
 def sendcommand(command):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = "172.16.68.101"
+    host = "127.0.0.1"
     port =8000
     s.connect((host,port))
     s.send(command.encode())
     data = s.recv(1024).decode()
-    print (bcolors.YELLOW + data)
+    print (bcolors.OKGREEN + data)
     s.close()
 
 
@@ -174,14 +174,20 @@ def run():
                 elif commandFlags.get('groups') == 1:
                     if commandFlags.get('group#s') == 1:
                         #Send Command
-                        sendcommand(command)
                         print(bcolors.YELLOW + command)
+                        try:
+                            sendcommand(command)
+                        except:
+                            print(bcolors.FAIL + 'Connection Failed')
                     else:
                         error = MISSING_OPERATION
                 else:
                     #Send Command
-                    sendcommand(command)
                     print(bcolors.YELLOW + command + 'to all groups. ')
+                    try:
+                        sendcommand(command)
+                    except:
+                        print(bcolors.FAIL + 'Connection Failed')
 
                 ###################################
                 #           query load            #
@@ -195,10 +201,18 @@ def run():
                 elif commandFlags.get('groups') == 1:
                     if commandFlags.get('group#s') == 1:
                         print(bcolors.YELLOW + command)
+                        try:
+                            sendcommand(command)
+                        except:
+                            print(bcolors.FAIL + 'Connection Failed')
                     else:
                         error = MISSING_OPERATION
                 else:
                     print(bcolors.YELLOW + command + 'all groups.')
+                    try:
+                        sendcommand(command)
+                    except:
+                        print(bcolors.FAIL + 'Connection Failed')
 
                 ###################################
                 #          query online           #
@@ -213,10 +227,18 @@ def run():
                 elif commandFlags.get('groups') == 1:
                     if commandFlags.get('group#s') == 1:
                         print(bcolors.YELLOW + command)
+                        try:
+                            sendcommand(command)
+                        except:
+                            print(bcolors.FAIL + 'Connection Failed')
                     else:
                         error = MISSING_OPERATION
                 else:
                     print(bcolors.YELLOW + command + 'all groups.')
+                    try:
+                        sendcommand(command)
+                    except:
+                        print(bcolors.FAIL + 'Connection Failed')
 
 
 
