@@ -13,6 +13,7 @@ class bcolors:
     OFF = "\033[0;0m"
 
 # Error Codes
+SERVER_IP = "172.16.68.101"
 NO_ERROR = 0
 MISSING_OPERATION = -1 
 NO_INT_AFTER_POWER = 1
@@ -32,7 +33,7 @@ firstArgs = {'set', 'help', 'query', 'q'}
 
 def sendcommand(command):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = "127.0.0.1"
+    host = SERVER_IP
     port =8000
     s.connect((host,port))
     s.send(command.encode())
