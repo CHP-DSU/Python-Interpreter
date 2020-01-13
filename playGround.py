@@ -181,6 +181,11 @@ def ifValidFirst(first_command):
     else:
         return False
 
+# Read the dict that stores all of our flags / variable of our command.
+# We use this method because it allows us to make sure we are reading it in the order we want. 
+# By reading it in the order we want, we can thus build a command string in the order that we read from. 
+# This also has a second layer of protection against inproper comand structure. If we come accross a command
+# that dosent have a flag flipped that needs to be, this will not fill in the command with inproper stuff.
 def readDict(cmdDict):
     global command
     sendCommand = ''
@@ -317,7 +322,7 @@ def run():
             print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Cannot use 'set' and 'query' together.")
         elif error == LOAD_ONINE_CONFLICT:
             print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Cannot use 'load' and 'online' together.")
-    print(commandFlags)
+   # print(commandFlags)
    # send = readDict(commandFlags)
    # print(send)
     resetGlobal()
