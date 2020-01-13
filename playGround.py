@@ -59,6 +59,8 @@ def sendcommand(sendcommand):
     # Print recieved message
     print (bcolors.OKGREEN + data)
     print(bcolors.YELLOW + command)
+    data = s.recv(1024).decode()
+    print (bcolors.OKGREEN + data)
     # Close the socket (kill connection). We do this for a variety of reasons. 
     # 1, We only want to have communication with the host when we decide. We dont want to constantly be listening/waiting to send if we dont have to. 
     # 2, Security, this way we ONLY listen when we open a connection to send a command. 
@@ -210,6 +212,9 @@ def readDict(cmdDict):
                 else:
                     sendCommand += 'in all groups'
                     command += 'in all groups.'
+    elif(cmdDict.get('query')!= -1):
+        sendCommand = 'query'
+        command = 'Querrying device...'
     return sendCommand
     
 
@@ -220,6 +225,7 @@ def run():
     global realerror
     global command
     global commandFlags
+    resetGlobal()
     text = input(prompt + bcolors.OKBLUE).lower().split(' ')
     if text[0].strip('\n') == 'quit' or text[0].strip('\n') == 'exit':
         return
