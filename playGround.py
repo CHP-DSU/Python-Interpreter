@@ -202,6 +202,9 @@ def readDict(cmdDict):
                     else:
                        sendCommand += 'all groups'
                        command += 'all groups.'
+                else:
+                    sendCommand += 'in all groups'
+                    command += 'in all groups.'
     return sendCommand
     
 
@@ -314,7 +317,7 @@ def run():
             print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Cannot use 'set' and 'query' together.")
         elif error == LOAD_ONINE_CONFLICT:
             print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Cannot use 'load' and 'online' together.")
-   # print(commandFlags)
+    print(commandFlags)
    # send = readDict(commandFlags)
    # print(send)
     resetGlobal()
