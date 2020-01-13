@@ -18,6 +18,13 @@ class bcolors:
 # Constants
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 8000
+SETBIN      = 0b100000
+POWERBIN    = 0b010000
+PERCENTBIN  = 0b001000
+GROUPBIN    = 0b000100
+GNUMBIN     = 0b000010
+ALLGROUPSBIN= 0b000001
+
 
 # Error Codes
 NO_ERROR = 0
@@ -35,12 +42,13 @@ prompt = bcolors.OKGREEN + bcolors.BOLD + "::> " + bcolors.OFF
 commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
 firstArgs = {'set', 'help', 'query', 'q'}
 percent = 0
-binCommand = '000000' # converts a given number into base 2
+binCommand = 0b000000 # converts a given number into base 2
 # 100000 = set
 # 010000 = power
 # 001000 = %
 # 000100 = groups
 # 000010 = #
+# 000001 = all groups
 # 111000 = Set power %
 # 111110 = Set power % groups #
 
@@ -77,6 +85,7 @@ def interpreter(text):
     global realerror
     global command
     global commandFlags
+    global binCommand
 
     # Because we use recursion (which makes our life easier) we need to check if each iteration has an error. 
     # This will just stop us from running into any issues along the way. 
@@ -87,8 +96,9 @@ def interpreter(text):
         return
     # Check if our current word is '___'
     if text[0] == 'set':
+        binCommand = binCommand | SETBIN
         commandFlags['set'] = 1
-        command = command + 'Setting '
+        command = command + 'Setting ' 
     elif text[0] == 'power':
         commandFlags['power'] = 1
         try:
@@ -96,6 +106,7 @@ def interpreter(text):
             command = command + 'power to ' + str(percent) + '% '
             text.pop(0)
             commandFlags['powerLvl'] = 1
+            binCommand = binCommand | POWERBIN | PERCENTBIN
         except (ValueError, IndexError) as e:
             error = MISSING_OPERATION
             realerror = e
@@ -110,6 +121,7 @@ def interpreter(text):
                 command = command + str(intg)+ ' '
             text.pop(0)
             commandFlags['group#s'] = 1
+            binCommand = binCommand | GROUPBIN | GNUMBIN
         except (ValueError, IndexError) as e:
             error = GROUP_STRUCT_ERROR
             realerror = e
@@ -181,7 +193,7 @@ def resetGlobal():
     command = ''
     commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
     percent = 0
-    binCommand = '000000'
+    binCommand = 0b000000
 
 # Check if the first word you entered if in a valid list of words. This is a temporary(maybe) way to check if a command is valid. 
 # Commands are all based off of the first word anyway. ('set power 5' is determined off of the word 'set') So if the first
@@ -198,6 +210,7 @@ def run():
     global realerror
     global command
     global commandFlags
+    global binCommand
     text = input(prompt + bcolors.OKBLUE).lower().split(' ')
     if text[0].strip('\n') == 'quit':
         return
@@ -229,6 +242,7 @@ def run():
                         error = MISSING_OPERATION
                 else:
                     #Send Command
+                    binCommand = binCommand | ALLGROUPSBIN
                     print(bcolors.YELLOW + command + 'to all groups. ')
                     try:
                         sendcommand(command)
@@ -299,6 +313,7 @@ def run():
         elif error == LOAD_ONINE_CONFLICT:
             print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Cannot use 'load' and 'online' together.")
 
+    print(bin(binCommand).lstrip('0b') )
     resetGlobal()
     run()
  
