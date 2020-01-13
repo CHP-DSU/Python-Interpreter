@@ -185,7 +185,7 @@ def ifValidFirst(first_command):
 # We use this method because it allows us to make sure we are reading it in the order we want. 
 # By reading it in the order we want, we can thus build a command string in the order that we read from. 
 # This also has a second layer of protection against inproper comand structure. If we come accross a command
-# that dosent have a flag flipped that needs to be, this will not fill in the command with inproper stuff.
+# that dosent have a flag flipped that needs to be, this will not fill in the command with inproper stuff.se
 def readDict(cmdDict):
     global command
     sendCommand = ''
