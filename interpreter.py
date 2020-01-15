@@ -16,8 +16,10 @@ class bcolors:
     OFF = "\033[0;0m"
 
 # Constants
-SERVER_IP = "127.0.0.1"
+SERVER_IP = "172.16.68.107"
 SERVER_PORT = 8000
+
+
 
 # Error Codes
 NO_ERROR = 0
@@ -32,22 +34,16 @@ error = NO_ERROR
 realerror = ''
 command = ''
 prompt = bcolors.OKGREEN + bcolors.BOLD + "::> " + bcolors.OFF
-commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
+commandFlags = {'set': 0, 'power': 0, 'powerLvl': -1, 'groups': 0, 'group#s': -1, 'query': 0, 'load': 0, 'online': 0}
 firstArgs = {'set', 'help', 'query', 'q'}
 percent = 0
-binCommand = '000000' # converts a given number into base 2
-# 100000 = set
-# 010000 = power
-# 001000 = %
-# 000100 = groups
-# 000010 = #
-# 111000 = Set power %
-# 111110 = Set power % groups #
+
 
 
 # Function to create the session to connect to
 # 
-def sendcommand(command):
+def sendcommand(sendcommand):
+    global command
     # Define the socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Define the host IP (IP of the server connecting to [is a string])
@@ -57,10 +53,13 @@ def sendcommand(command):
     # Connect using the socket, notices it uses the host and port given.
     s.connect((host,port))
     # Send the command. String must be encoded (sent as bytes). .encode does this for us. 
-    s.send(command.encode())
+    s.send(sendcommand.encode())
     # Capture and recieved messege. Must decode (transfer from bytes to chars). 1024 means we can recieve 1024 bytes at most. Can be increased. 
     data = s.recv(1024).decode()
     # Print recieved message
+    print (bcolors.OKGREEN + data)
+    print(bcolors.YELLOW + command)
+    data = s.recv(1024).decode()
     print (bcolors.OKGREEN + data)
     # Close the socket (kill connection). We do this for a variety of reasons. 
     # 1, We only want to have communication with the host when we decide. We dont want to constantly be listening/waiting to send if we dont have to. 
@@ -88,41 +87,35 @@ def interpreter(text):
     # Check if our current word is '___'
     if text[0] == 'set':
         commandFlags['set'] = 1
-        command = command + 'Setting '
     elif text[0] == 'power':
         commandFlags['power'] = 1
         try:
             percent = int(text[1].strip('\n'))
-            command = command + 'power to ' + str(percent) + '% '
             text.pop(0)
-            commandFlags['powerLvl'] = 1
+            commandFlags['powerLvl'] = percent
         except (ValueError, IndexError) as e:
             error = MISSING_OPERATION
             realerror = e
-            commandFlags['powerLvl'] = 0
+            commandFlags['powerLvl'] = -1
     elif text[0] == 'group' or text[0] == 'groups':
         commandFlags['groups'] = 1
         try:
-            command = command + 'group(s) '
             groupList = text[1].split(',')
+            commandFlags['group#s'] = ''
             for g in groupList:
                 intg = int(g)
-                command = command + str(intg)+ ' '
+                commandFlags['group#s'] += str(intg) + ','
             text.pop(0)
-            commandFlags['group#s'] = 1
         except (ValueError, IndexError) as e:
             error = GROUP_STRUCT_ERROR
             realerror = e
-            commandFlags['group#s'] = 0
+            commandFlags['group#s'] = -1
     elif text[0] == 'query'or text[0] == 'q':
         commandFlags['query'] = 1
-        command = command + 'Query: '
     elif text[0] == 'load':
         commandFlags['load'] = 1
-        command = command + 'loading '
     elif text[0] == 'online':
         commandFlags['online'] = 1
-        command = command + 'online '
     # Remove the first word. 
     text.pop(0)
     # Pass in the rest of the string. (If it is empty it will still pass it).
@@ -175,13 +168,11 @@ def resetGlobal():
     global command
     global commandFlags
     global percent
-    global binCommand
     error = NO_ERROR
     realerror = ''
     command = ''
-    commandFlags = {'set': 0, 'power': 0, 'powerLvl': 0, 'groups': 0, 'group#s': 0, 'query': 0, 'load': 0, 'online': 0}
+    commandFlags = {'set': 0, 'power': 0, 'powerLvl': -1, 'groups': 0, 'group#s': -1, 'query': 0, 'load': 0, 'online': 0}
     percent = 0
-    binCommand = '000000'
 
 # Check if the first word you entered if in a valid list of words. This is a temporary(maybe) way to check if a command is valid. 
 # Commands are all based off of the first word anyway. ('set power 5' is determined off of the word 'set') So if the first
@@ -192,16 +183,55 @@ def ifValidFirst(first_command):
     else:
         return False
 
+# Read the dict that stores all of our flags / variable of our command.
+# We use this method because it allows us to make sure we are reading it in the order we want. 
+# By reading it in the order we want, we can thus build a command string in the order that we read from. 
+# This also has a second layer of protection against inproper comand structure. If we come accross a command
+# that dosent have a flag flipped that needs to be, this will not fill in the command with inproper stuff.se
+def readDict(cmdDict):
+    global command
+    sendCommand = ''
+    if cmdDict.get('set') != 0:
+        sendCommand += 'set '
+        command += 'Setting '
+        if cmdDict.get('power') != 0:
+            sendCommand += 'power '
+            command += 'power '
+            if cmdDict.get('powerLvl') != -1:
+                sendCommand += str(cmdDict.get('powerLvl')) + ' '
+                command += 'to ' + str(cmdDict.get('powerLvl')) + '% '
+                if cmdDict.get('groups') != 0:
+                    sendCommand += 'in '
+                    command += 'in '
+                    if cmdDict.get('group#s') != -1:
+                        sendCommand += 'group(s) ' + str(cmdDict.get('group#s').strip(','))
+                        command += 'group(s) ' + str(cmdDict.get('group#s').strip(',')) + '.'
+                    else:
+                       sendCommand += 'all groups'
+                       command += 'all groups.'
+                else:
+                    sendCommand += 'in all groups'
+                    command += 'in all groups.'
+    elif(cmdDict.get('query')!= -1):
+        sendCommand = 'query'
+        command = 'Querrying device...'
+    return sendCommand
+    
+
+
 # Main interpreter. (Checks for all of our syntax)
 def run():
     global error
     global realerror
     global command
     global commandFlags
+    resetGlobal()
     text = input(prompt + bcolors.OKBLUE).lower().split(' ')
-    if text[0].strip('\n') == 'quit':
+    if text[0].strip('\n') == 'quit' or text[0].strip('\n') == 'exit':
         return
-    if not ifValidFirst( text[0].strip('\n') ):
+    elif text[0] == '':
+        resetGlobal()
+    elif not ifValidFirst( text[0].strip('\n') ):
         print(bcolors.FAIL + bcolors.BOLD + "ERROR: '" + bcolors.YELLOW + text[0].strip('\n') + bcolors.OFF + bcolors.FAIL + "' is not a valid command.")
     else:
         if text[0].strip('\n') == 'help':
@@ -213,25 +243,25 @@ def run():
                 ###################################
                 #               set               #
                 ################################### 
-            if commandFlags.get('set') == 1 and commandFlags.get('power') == 1 and commandFlags.get('powerLvl') == 1:
+            if commandFlags.get('set') == 1 and commandFlags.get('power') == 1 and commandFlags.get('powerLvl') != -1:
                 if commandFlags.get('query') == 1:
                     error = SET_QUERY_CONFLICT
                     # tried to querry and set together. 
                 elif commandFlags.get('groups') == 1:
-                    if commandFlags.get('group#s') == 1:
+                    if commandFlags.get('group#s') != -1:
                         #Send Command
-                        print(bcolors.YELLOW + command)
                         try:
-                            sendcommand(command)
+                            send = readDict(commandFlags)
+                            sendcommand(send)
                         except:
                             print(bcolors.FAIL + 'Connection Failed')
                     else:
                         error = MISSING_OPERATION
                 else:
                     #Send Command
-                    print(bcolors.YELLOW + command + 'to all groups. ')
                     try:
-                        sendcommand(command)
+                        send = readDict(commandFlags)
+                        sendcommand(send)
                     except:
                         print(bcolors.FAIL + 'Connection Failed')
 
@@ -245,18 +275,18 @@ def run():
                 if commandFlags.get('online') == 1:
                     error = LOAD_ONINE_CONFLICT
                 elif commandFlags.get('groups') == 1:
-                    if commandFlags.get('group#s') == 1:
-                        print(bcolors.YELLOW + command)
+                    if commandFlags.get('group#s') != -1:
                         try:
-                            sendcommand(command)
+                            send = readDict(commandFlags)
+                            sendcommand(send)
                         except:
                             print(bcolors.FAIL + 'Connection Failed')
                     else:
                         error = MISSING_OPERATION
                 else:
-                    print(bcolors.YELLOW + command + 'all groups.')
                     try:
-                        sendcommand(command)
+                        send = readDict(commandFlags)
+                        sendcommand(send)
                     except:
                         print(bcolors.FAIL + 'Connection Failed')
 
@@ -271,18 +301,18 @@ def run():
                     error = LOAD_ONINE_CONFLICT
                     # tried to querry load and online together. 
                 elif commandFlags.get('groups') == 1:
-                    if commandFlags.get('group#s') == 1:
-                        print(bcolors.YELLOW + command)
+                    if commandFlags.get('group#s') != -1:
                         try:
-                            sendcommand(command)
+                            send = readDict(commandFlags)
+                            sendcommand(send)
                         except:
                             print(bcolors.FAIL + 'Connection Failed')
                     else:
                         error = MISSING_OPERATION
                 else:
-                    print(bcolors.YELLOW + command + 'all groups.')
                     try:
-                        sendcommand(command)
+                        send = readDict(commandFlags)
+                        sendcommand(send)
                     except:
                         print(bcolors.FAIL + 'Connection Failed')
 
@@ -298,7 +328,9 @@ def run():
             print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Cannot use 'set' and 'query' together.")
         elif error == LOAD_ONINE_CONFLICT:
             print(bcolors.FAIL + bcolors.BOLD + "ERROR:" + bcolors.OFF + bcolors.FAIL +" Cannot use 'load' and 'online' together.")
-
+   # print(commandFlags)
+   # send = readDict(commandFlags)
+   # print(send)
     resetGlobal()
     run()
  

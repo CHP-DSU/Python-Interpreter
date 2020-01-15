@@ -1,7 +1,9 @@
 # Imports
-
+import signal
 # Import sockets so that we can open up sockets to listen/send commands across ip 
 import socket
+import errno
+from socket import error as socket_error
 
 # Class for colors
 class bcolors:
@@ -18,8 +20,7 @@ class bcolors:
 # Constants
 SERVER_IP = "172.16.68.107"
 SERVER_PORT = 8000
-
-
+TIMEOUT = 15
 
 # Error Codes
 NO_ERROR = 0
@@ -60,7 +61,7 @@ def sendcommand(sendcommand):
     print (bcolors.OKGREEN + data)
     print(bcolors.YELLOW + command)
     data = s.recv(1024).decode()
-    print (bcolors.OKGREEN + data)
+    print (bcolors.FAIL + data)
     # Close the socket (kill connection). We do this for a variety of reasons. 
     # 1, We only want to have communication with the host when we decide. We dont want to constantly be listening/waiting to send if we dont have to. 
     # 2, Security, this way we ONLY listen when we open a connection to send a command. 
@@ -68,6 +69,9 @@ def sendcommand(sendcommand):
     # (At the current moment, the host can have up to 5 connections at any given time (realistically this will be plenty))
     s.close()
 
+def handler(signum, frame):
+    print(bcolors.FAIL + 'Timed out waiting for response...')
+    #raise OSError("No second response!")
 
 def interpreter(text):
     #print(text)
@@ -116,6 +120,9 @@ def interpreter(text):
         commandFlags['load'] = 1
     elif text[0] == 'online':
         commandFlags['online'] = 1
+    else:
+        print(bcolors.FAIL + "'" +text[0] + "' is an invalid operand.")
+        return
     # Remove the first word. 
     text.pop(0)
     # Pass in the rest of the string. (If it is empty it will still pass it).
@@ -217,7 +224,23 @@ def readDict(cmdDict):
         command = 'Querrying device...'
     return sendCommand
     
-
+def sender(flags):
+    send = readDict(flags)
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(TIMEOUT)
+    try:
+        sendcommand(send)
+    except socket_error as serr:
+        if serr.errno != errno.ECONNREFUSED:
+            # Not the error we are looking for, re-raise
+            raise serr
+        else:
+            print(bcolors.FAIL + 'Connection Failed')
+    except (OSError) as e:
+        e = e
+    except (Exception) as e:
+        print(e)
+    signal.alarm(0)
 
 # Main interpreter. (Checks for all of our syntax)
 def run():
@@ -239,6 +262,7 @@ def run():
         interpreter(text)
         #print(commandFlags)
 
+        # After intperpreter is done running lets figure out what to do:
         if error == NO_ERROR:
                 ###################################
                 #               set               #
@@ -250,20 +274,12 @@ def run():
                 elif commandFlags.get('groups') == 1:
                     if commandFlags.get('group#s') != -1:
                         #Send Command
-                        try:
-                            send = readDict(commandFlags)
-                            sendcommand(send)
-                        except:
-                            print(bcolors.FAIL + 'Connection Failed')
+                        sender(commandFlags)
                     else:
                         error = MISSING_OPERATION
                 else:
                     #Send Command
-                    try:
-                        send = readDict(commandFlags)
-                        sendcommand(send)
-                    except:
-                        print(bcolors.FAIL + 'Connection Failed')
+                        sender(commandFlags)
 
                 ###################################
                 #           query load            #
@@ -276,19 +292,11 @@ def run():
                     error = LOAD_ONINE_CONFLICT
                 elif commandFlags.get('groups') == 1:
                     if commandFlags.get('group#s') != -1:
-                        try:
-                            send = readDict(commandFlags)
-                            sendcommand(send)
-                        except:
-                            print(bcolors.FAIL + 'Connection Failed')
+                        sender(commandFlags)
                     else:
                         error = MISSING_OPERATION
                 else:
-                    try:
-                        send = readDict(commandFlags)
-                        sendcommand(send)
-                    except:
-                        print(bcolors.FAIL + 'Connection Failed')
+                    sender(commandFlags)
 
                 ###################################
                 #          query online           #
@@ -302,19 +310,11 @@ def run():
                     # tried to querry load and online together. 
                 elif commandFlags.get('groups') == 1:
                     if commandFlags.get('group#s') != -1:
-                        try:
-                            send = readDict(commandFlags)
-                            sendcommand(send)
-                        except:
-                            print(bcolors.FAIL + 'Connection Failed')
+                        sender(commandFlags)
                     else:
                         error = MISSING_OPERATION
                 else:
-                    try:
-                        send = readDict(commandFlags)
-                        sendcommand(send)
-                    except:
-                        print(bcolors.FAIL + 'Connection Failed')
+                    sender(commandFlags)
 
 
         #Print our error codes. 
