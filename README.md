@@ -1,2 +1,0 @@
-# CHP Interpreter
-Utility interpreter
