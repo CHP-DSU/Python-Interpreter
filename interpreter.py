@@ -1,5 +1,8 @@
+#!/usr/bin/python3
+
 # Imports
 import signal
+from os import system
 # Import sockets so that we can open up sockets to listen/send commands across ip 
 import socket
 import errno
@@ -18,7 +21,7 @@ class bcolors:
     OFF = "\033[0;0m"
 
 # Constants
-SERVER_IP = "172.16.68.100"
+SERVER_IP = "172.16.68.101"
 SERVER_PORT = 8000
 TIMEOUT = 15
 
@@ -119,7 +122,7 @@ def interpreter(text):
             error = MISSING_OPERATION
             realerror = e
             commandFlags['powerLvl'] = -1
-    elif text[0] == 'group' or text[0] == 'groups':
+    elif text[0] == 'group' or text[0] == 'groups' or text[0] == 'g':
         commandFlags['groups'] = 1
         try:
             groupList = text[1].split(',')
@@ -257,6 +260,8 @@ def run():
     text = input(prompt + bcolors.OKBLUE).lower().split(' ')
     if text[0].strip('\n') == 'quit' or text[0].strip('\n') == 'exit':
         return
+    elif text[0] == 'clear':
+        _ = system('clear')
     elif text[0] == '':
         resetGlobal()
     elif not ifValidFirst( text[0].strip('\n') ):
@@ -341,6 +346,7 @@ def run():
  
 # Main
 if __name__== "__main__":
+    _ = system('clear')
     try:
         run()
     except (KeyboardInterrupt, EOFError):
