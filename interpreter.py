@@ -21,7 +21,7 @@ class bcolors:
     OFF = "\033[0;0m"
 
 # Constants
-SERVER_IP = "172.16.68.101"
+SERVER_IP = "172.16.68.108"
 SERVER_PORT = 8000
 TIMEOUT = 15
 
@@ -75,6 +75,8 @@ def sendcommand(sendcommand):
         # Print recieved message
         print (bcolors.OKGREEN + data)
         print(bcolors.YELLOW + command)
+        data = s.recv(1024).decode()
+        print (bcolors.FAIL + data)
         data = s.recv(1024).decode()
         print (bcolors.FAIL + data)
         signal.alarm(0)
