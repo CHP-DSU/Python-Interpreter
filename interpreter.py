@@ -21,9 +21,9 @@ class bcolors:
     OFF = "\033[0;0m"
 
 # Constants
-SERVER_IP = "172.16.68.108"
-SERVER_PORT = 8000
-TIMEOUT = 15
+SERVER_IP = "172.16.68.100"
+SERVER_PORT = 8001
+TIMEOUT = 30
 
 # Error Codes
 NO_ERROR = 0
@@ -101,11 +101,12 @@ def interpreter(text):
     # Global Variables
     global error
     global realerror
+    #lets see what is happening here with the commands. 
     global command
     global commandFlags
 
     # Because we use recursion (which makes our life easier) we need to check if each iteration has an error. 
-    # This will just stop us from running into any issues along the way. 
+    # This will just stop us from running into any issues along the way.
     if not error == NO_ERROR:
         return
     # Check if we have no more words to process. 
@@ -116,6 +117,7 @@ def interpreter(text):
         commandFlags['set'] = 1
     elif text[0] == 'power':
         commandFlags['power'] = 1
+        #put a try catch here to see what is going on with the command flags
         try:
             percent = int(text[1].strip('\n'))
             text.pop(0)
@@ -128,6 +130,7 @@ def interpreter(text):
         commandFlags['groups'] = 1
         try:
             groupList = text[1].split(',')
+            #this glag will check to see if we get the groups flags
             commandFlags['group#s'] = ''
             for g in groupList:
                 intg = int(g)
@@ -250,9 +253,7 @@ def readDict(cmdDict):
 def sender(flags):
     send = readDict(flags)
     sendcommand(send)
-    
 
-# Main interpreter. (Checks for all of our syntax)
 def run():
     global error
     global realerror
